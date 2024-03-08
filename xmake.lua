@@ -17,6 +17,10 @@ add_requires("tinyobjloader")
 add_requires("yaml-cpp")
 add_requires("eigen")
 
+if is_plat("windows") then
+    add_cxflags("/EHsc")
+end
+
 target("assets")
     set_kind("phony")
     set_default(true)
@@ -95,9 +99,6 @@ target("lab0")
     add_headerfiles("src/VCX/Labs/0-GettingStarted/*.h")
     add_headerfiles("src/VCX/Labs/0-GettingStarted/*.hpp")
     add_files      ("src/VCX/Labs/0-GettingStarted/*.cpp")
-    if is_plat("windows") then
-        add_cxflags("/EHsc")
-    end
 
 target("lab1")
     set_kind("binary")
@@ -107,9 +108,6 @@ target("lab1")
     add_headerfiles("src/VCX/Labs/1-RigidBody/*.h")
     add_headerfiles("src/VCX/Labs/1-RigidBody/*.hpp")
     add_files      ("src/VCX/Labs/1-RigidBody/*.cpp")
-    if is_plat("windows") then
-        add_cxflags("/EHsc")
-    end
 
 target("lab2")
     set_kind("binary")
@@ -119,9 +117,6 @@ target("lab2")
     add_headerfiles("src/VCX/Labs/2-FluidSimulation/*.h")
     add_headerfiles("src/VCX/Labs/2-FluidSimulation/*.hpp")
     add_files      ("src/VCX/Labs/2-FluidSimulation/*.cpp")
-    if is_plat("windows") then
-        add_cxflags("/EHsc")
-    end
 
 target("lab3")
     set_kind("binary")
@@ -130,6 +125,3 @@ target("lab3")
     add_headerfiles("src/VCX/Labs/3-FEM/*.h")
     add_headerfiles("src/VCX/Labs/3-FEM/*.hpp")
     add_files      ("src/VCX/Labs/3-FEM/*.cpp")
-    if is_plat("windows") then
-        add_cxflags("/EHsc")
-    end
