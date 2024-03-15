@@ -53,7 +53,8 @@ namespace VCX::Labs::Common {
         void         ProcessInput(Engine::Camera & camera, ImVec2 const & mousePos);
         glm::vec3    getMouseMove();
 
-    private:
+    // private:
+    protected:
         enum StateBits {
             StateNone   = 0,
             StateRotate = 1 << 0,
