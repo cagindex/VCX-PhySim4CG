@@ -33,6 +33,8 @@ namespace VCX::Labs::RigidBody {
 
         void                             Reset();
 
+        void                             HandleKey(ImGuiKey value, bool& t, glm::vec3 const& f);
+
 	private:
 		Engine::GL::UniqueProgram           _program;
         Engine::GL::UniqueRenderFrame       _frame;
@@ -44,7 +46,7 @@ namespace VCX::Labs::RigidBody {
 
 		/* cubes List */
         std::vector<float>                  _masses = {
-            1000.f, 1.f
+            100000.f, 10.f
         };
         std::vector<glm::vec3>              _cubes  = {
             {10.f, 1.f, 10.f},
@@ -65,6 +67,11 @@ namespace VCX::Labs::RigidBody {
         glm::vec3 const _lineColor {1.f, 1.f, 1.f};
 
         RigidBodySys _rigidBodySys;
-        glm::vec3 const gravity = {0.f, -9.8f, 0.f};
+        glm::vec3 const gravity = {0.f, -0.98f, 0.f};
+
+        /* Player part */
+        glm::vec3 const drag_force_x = {3.f, 0.f, 0.f};
+        glm::vec3 const drag_force_y = {0.f, 3.f, 0.f};
+        glm::vec3 const drag_force_z = {0.f, 0.f, 3.f};
 	};
 }

@@ -26,7 +26,7 @@ namespace VCX::Labs::RigidBody {
 
             /* Init Status */
             for (int i = 0; i < 2; ++i){
-                w[0][i] = glm::vec3(0.f, 0.f, 0.f);
+                w[0][i] = glm::vec3(1.f, 0.f, 0.f);
                 w[1][i] = glm::vec3(0.f, 0.f, 0.f);
                 w[2][i] = glm::vec3(0.f, 0.f, 0.f);}
             
@@ -74,6 +74,8 @@ namespace VCX::Labs::RigidBody {
             _rigidbody[i].SetQ(q[combo_index][i]);
             _rigidbody[i].SetV(v[combo_index][i]);
             _rigidbody[i].SetW(w[combo_index][i]);
+            _rigidbody[i].SetForce({0.f, 0.f, 0.f});
+            _rigidbody[i].SetTorque({0.f, 0.f, 0.f});
         }
     }
 
@@ -175,6 +177,8 @@ namespace VCX::Labs::RigidBody {
     }
 
     Common::CaseRenderResult CaseTwoCollision::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
+        // apply mouse control first
+        OnProcessMouseControl(_cameraManager.getMouseMove());
         /* Simulate */
         Collision();
         for (auto& rigidbody : _rigidbody){
@@ -214,5 +218,18 @@ namespace VCX::Labs::RigidBody {
 
     void CaseTwoCollision::OnProcessInput(ImVec2 const& pos){
         _cameraManager.ProcessInput(_camera, pos);
+    }
+
+    void CaseTwoCollision::OnProcessMouseControl(glm::vec3 mouseDelta) {
+        float tmp =  glm::sign(glm::length(mouseDelta));
+        if (tmp == 0.f){
+            _rigidbody[0].SetForce({0.f, 0.f, 0.f});
+            _rigidbody[1].SetForce({0.f, 0.f, 0.f});
+        }
+        else{
+            glm::vec3 dir = tmp * glm::normalize(_rigidbody[0].GetX() - _rigidbody[1].GetX());
+            _rigidbody[0].AddForce( dir );
+            _rigidbody[1].AddForce( -dir );
+        }
     }
 }

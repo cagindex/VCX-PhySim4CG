@@ -24,6 +24,8 @@ namespace VCX::Labs::RigidBody {
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
         virtual void                     OnProcessInput(ImVec2 const & pos) override;
 
+        void                             OnProcessMouseControl(glm::vec3 mourseDelta);
+
         void                             Render(Engine::GL::UniqueIndexedRenderItem& item, glm::vec3 const& color, std::span<std::byte const> const& span_bytes);
         void                             Reset();
 

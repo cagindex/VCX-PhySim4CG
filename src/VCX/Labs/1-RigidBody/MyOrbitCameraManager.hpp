@@ -25,16 +25,16 @@ namespace VCX::Labs::RigidBody{
             bool         altKey    = io.KeyAlt;
 
             float heightNorm     = 1.f / window->Rect().GetHeight();
-            bool  rotating       = EnableRotate && moving && ((! funcKey && leftHeld) || (funcKey && rightHeld)) && (! altKey);
-            bool  panningByMouse = EnablePan && moving && ((funcKey && leftHeld) || (! funcKey && rightHeld)) && (! altKey);
+            bool  rotating       = EnableRotate && moving && ((leftHeld) || (rightHeld));
+            bool  panningByMouse = EnablePan && moving && ((funcKey && leftHeld) || (! funcKey && rightHeld));
 
             bool movingByMouse = moving && altKey && leftHeld;
 
             bool panningByKeyBoard[6] = {
-                ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_UpArrow)),
-                ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_DownArrow)),
-                ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_LeftArrow)),
-                ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_D) || ImGui::IsKeyDown(ImGuiKey_RightArrow)),
+                ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_UpArrow),
+                ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_DownArrow),
+                ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_LeftArrow),
+                ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_RightArrow),
                 ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_Q),
                 ImGui::IsItemFocused() && ImGui::IsKeyDown(ImGuiKey_E)
             };

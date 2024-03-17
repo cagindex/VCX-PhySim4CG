@@ -22,7 +22,7 @@ namespace VCX::Labs::RigidBody {
         void InitCollisionTransformes();
         void Reset();
 
-        const RigidBody& operator [] (int idx) { return _bodies[idx]; }
+        RigidBody& operator [] (int idx) { return _bodies[idx]; }
 
     private:
         std::vector<RigidBody> _bodies;

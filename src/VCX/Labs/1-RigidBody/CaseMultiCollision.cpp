@@ -133,7 +133,24 @@ namespace VCX::Labs::RigidBody {
         };
     }
 
+    void CaseMultiCollision::HandleKey(ImGuiKey key, bool& t, glm::vec3 const& f){
+        if (ImGui::IsKeyDown(key) && (!t)){
+            _rigidBodySys[1].AddForce(f);
+            t = true;
+        }
+        if (!ImGui::IsKeyDown(key) && (t)){ 
+            _rigidBodySys[1].AddForce(-f);
+            t = false; 
+        }
+    }
+
     void CaseMultiCollision::OnProcessInput(ImVec2 const& pos){
+        static bool w = false, s = false, a = false, d = false;
         _cameraManager.ProcessInput(_camera, pos);
+
+        HandleKey(ImGuiKey_W, w, drag_force_x);
+        HandleKey(ImGuiKey_S, s, -drag_force_x);
+        HandleKey(ImGuiKey_A, a, -drag_force_z);
+        HandleKey(ImGuiKey_D, d, drag_force_z);
     }
 }
