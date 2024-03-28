@@ -26,7 +26,7 @@ namespace VCX::Labs::RigidBody {
 
             /* Init Status */
             for (int i = 0; i < 2; ++i){
-                w[0][i] = glm::vec3(1.f, 0.f, 0.f);
+                w[0][i] = glm::vec3(0.f, 0.f, 0.f);
                 w[1][i] = glm::vec3(0.f, 0.f, 0.f);
                 w[2][i] = glm::vec3(0.f, 0.f, 0.f);}
             
@@ -41,9 +41,8 @@ namespace VCX::Labs::RigidBody {
             x[1][1] = {-2.f, 0.f, 0.f};
             v[1][0] = {-0.5f, 0.f, 0.f};
             v[1][1] = {0.5f, 0.f, 0.f};
-            q[1][0] = {1.f, 0.f, 0.f, 0.f};
-            q[1][1] = glm::quat(0.966f, 0.f, 0.259f, 0.f) *
-                      glm::quat(0.924f, 0.f, 0.f, 0.383f);
+            q[1][0] = glm::normalize(glm::quat(0.2f, 0.1f, 0.3f, 0.3f));
+            q[1][1] = glm::quat(0.966f, 0.f, 0.259f, 0.f);
             
             x[2][0] = {0.f, 0.f, 2.f};
             x[2][1] = {0.f, 0.f, -2.f};
@@ -109,19 +108,18 @@ namespace VCX::Labs::RigidBody {
         fcl::CollisionResult<float>  collisionResult;
 
         /* Collide */
-        fcl::collide(&box_A, &box_B, collisionRequest, collisionResult);
+        fcl::collide(&box_B, &box_A, collisionRequest, collisionResult);
 
         if (!collisionResult.isCollision()) return;
         std::vector<fcl::Contact<float>> contacts;
         collisionResult.getContacts(contacts);
-
         /* Collision handle */ 
         glm::vec3 n   = {0.f, 0.f, 0.f},
                   x_a = {0.f, 0.f, 0.f},
                   x_b = {0.f, 0.f, 0.f};
         for (auto _contact : contacts){
             // Get N
-            n   += -flc2glm(_contact.normal);
+            n   += flc2glm(_contact.normal);
             // Get X
             x_a += flc2glm(_contact.pos);
             x_b += flc2glm(_contact.pos);
@@ -136,12 +134,12 @@ namespace VCX::Labs::RigidBody {
         // Get Iinv
         glm::mat3 Iinv_a = item_a.GetIinv(),
                   Iinv_b = item_b.GetIinv();
-        // Get rloc
-        glm::vec3 rloc_a = x_a - item_a.GetX(),
-                  rloc_b = x_b - item_b.GetX();
+        // Update x_a
+        x_a = x_a - item_a.GetX();
+        x_b = x_b - item_b.GetX();
         // calculate v
-        glm::vec3 v_a   = item_a.GetV() + glm::cross(item_a.GetW(), rloc_a),
-                  v_b   = item_b.GetV() + glm::cross(item_b.GetW(), rloc_b);
+        glm::vec3 v_a   = item_a.GetV() + glm::cross(item_a.GetW(), x_a),
+                  v_b   = item_b.GetV() + glm::cross(item_b.GetW(), x_b);
         float     v_rel = glm::dot(n, v_a - v_b);
         if (v_rel >= 0) return; // if they seperate return;
         
@@ -169,6 +167,13 @@ namespace VCX::Labs::RigidBody {
         bool ret = ImGui::Button("Reset");
         if (ret) Reset();
 
+        if (pause){
+            if (ImGui::Button("Start")) pause = false;
+        }
+        else{
+            if (ImGui::Button("Pause")) pause = true;
+        }
+
         int tmp = combo_index;
         ImGui::Combo("Combo", &combo_index, items, 3);
         if (tmp != combo_index)  Reset();
@@ -177,12 +182,12 @@ namespace VCX::Labs::RigidBody {
     }
 
     Common::CaseRenderResult CaseTwoCollision::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
-        // apply mouse control first
-        OnProcessMouseControl(_cameraManager.getMouseMove());
         /* Simulate */
-        Collision();
-        for (auto& rigidbody : _rigidbody){
-            rigidbody.Step(Engine::GetDeltaTime());
+        if (!pause){
+            Collision();
+            for (auto& rigidbody : _rigidbody){
+                rigidbody.Step(Engine::GetDeltaTime());
+            }
         }
 
         // rendering
@@ -218,18 +223,5 @@ namespace VCX::Labs::RigidBody {
 
     void CaseTwoCollision::OnProcessInput(ImVec2 const& pos){
         _cameraManager.ProcessInput(_camera, pos);
-    }
-
-    void CaseTwoCollision::OnProcessMouseControl(glm::vec3 mouseDelta) {
-        float tmp =  glm::sign(glm::length(mouseDelta));
-        if (tmp == 0.f){
-            _rigidbody[0].SetForce({0.f, 0.f, 0.f});
-            _rigidbody[1].SetForce({0.f, 0.f, 0.f});
-        }
-        else{
-            glm::vec3 dir = tmp * glm::normalize(_rigidbody[0].GetX() - _rigidbody[1].GetX());
-            _rigidbody[0].AddForce( dir );
-            _rigidbody[1].AddForce( -dir );
-        }
     }
 }

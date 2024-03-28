@@ -52,5 +52,21 @@ namespace VCX::Labs::RigidBody
         Iinv = R * IbodyInv * glm::transpose(R);
     }
 
+    void RigidBody::StepWV(float dt){
+        /* Update w and v */
+        v += force * dt;
+        w += torque * dt;
+    }
+    
+    void RigidBody::StepQX(float dt){
+        /* Update quaternion and x */
+        x += v * dt;
+        q = glm::normalize( q + glm::quat(0, w * dt / 2.f) * q );
+
+        /* Update Iinv */
+        glm::mat3 R = glm::mat3_cast( q );
+        Iinv = R * IbodyInv * glm::transpose(R);
+    }
+
 
 } // namespace VCX::Labs::RigidBody

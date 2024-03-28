@@ -7,7 +7,8 @@ namespace VCX::Labs::RigidBody {
         _ui(Labs::Common::UIOptions {}),
         _caseSpinningCube(),
         _caseTwoCollision(),
-        _caseMultiCollision() {
+        _caseMultiCollision()
+             {
     }
 
     void App::OnFrame() {

@@ -24,8 +24,6 @@ namespace VCX::Labs::RigidBody {
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
         virtual void                     OnProcessInput(ImVec2 const & pos) override;
 
-        void                             OnProcessMouseControl(glm::vec3 mourseDelta);
-
         void                             Render(Engine::GL::UniqueIndexedRenderItem& item, glm::vec3 const& color, std::span<std::byte const> const& span_bytes);
         void                             Reset();
 
@@ -80,15 +78,15 @@ namespace VCX::Labs::RigidBody {
         const std::vector<std::uint32_t> tri_index2 = { 0, 1, 2, 0, 2, 3, 1, 4, 0, 1, 4, 5, 1, 6, 5, 1, 2, 6, 2, 3, 7, 2, 6, 7, 0, 3, 7, 0, 4, 7, 4, 5, 6, 4, 6, 7 };
 
         const glm::mat3 Ibody1 = {
-            {1.0417f, 0.f, 0.f},
-            {0.f, 3.5417f, 0.f},
-            {0.f, 0.f, 4.1667f}
+            { mass[0]*(position1[0][1]*position1[0][1] + position1[0][2]*position1[0][2])/3.f, 0.f, 0.f },
+            { 0.f, mass[0]*(position1[0][0]*position1[0][0] + position1[0][2]*position1[0][2])/3.f, 0.f },
+            { 0.f, 0.f, mass[0]*(position1[0][0]*position1[0][0] + position1[0][1]*position1[0][1])/3.f },
         };
 
         const glm::mat3 Ibody2 = {
-            {1.0417f, 0.f, 0.f},
-            {0.f, 3.5417f, 0.f},
-            {0.f, 0.f, 4.1667f}
+            { mass[1]*(position2[1][1]*position2[1][1] + position2[1][2]*position2[1][2])/3.f, 0.f, 0.f },
+            { 0.f, mass[1]*(position2[1][0]*position2[1][0] + position2[1][2]*position2[1][2])/3.f, 0.f },
+            { 0.f, 0.f, mass[1]*(position2[1][0]*position2[1][0] + position2[1][1]*position2[1][1])/3.f },
         };
 
         glm::vec3 _boxColor { 121.0f / 255, 207.0f / 255, 171.0f / 255 };
@@ -107,5 +105,8 @@ namespace VCX::Labs::RigidBody {
         /* ImGui Combo */
         int combo_index = 0;
         const char* items[3] = { "Edge-Edge", "Point-Face", "Face-Face" };
+
+        /* ImGui Pause */
+        bool pause = false;
 	};
 }

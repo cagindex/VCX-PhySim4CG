@@ -9,6 +9,8 @@ namespace VCX::Labs::RigidBody{
     public:
         MyOrbitCameraManager():OrbitCamera(){}
 
+        glm::vec3 GetLookAt(){return glm::normalize(_target0 - _position0);}
+
         void ProcessInput(Engine::Camera & camera, ImVec2 const & mousePos) {
             auto            window  = ImGui::GetCurrentWindow();
             ImGuiIO const & io      = ImGui::GetIO();

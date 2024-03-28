@@ -16,4 +16,12 @@ namespace VCX::Labs::RigidBody {
     inline glm::vec3 flc2glm(fcl::Vector3f const& vec){
         return glm::vec3(vec[0], vec[1], vec[2]);
     }    
+
+    inline glm::mat3 Get_Cross_Matrix(glm::vec3 const& vec){
+        return glm::mat3({
+            {0.f, -vec.z, vec.y},
+            {vec.z, 0.f, -vec.x},
+            {-vec.y, vec.x, 0.f}
+        });
+    }
 }

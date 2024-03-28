@@ -18,11 +18,21 @@ namespace VCX::Labs::RigidBody {
         void Collision(); // Operate Collision
         void AddOverallForce(glm::vec3 const& f);
         void Step(const float dt);
+        void StepWV(const float dt);
+        void StepQX(const float dt);
 
         void InitCollisionTransformes();
         void Reset();
 
+        void SingleCollision(std::uint32_t);
+        void TwoCollision(std::uint32_t, std::uint32_t);
+
         RigidBody& operator [] (int idx) { return _bodies[idx]; }
+
+
+        float c = 0.5; // will be defined later
+        float restitution 	= 0.5f;                 // for collision
+	    float friction = 0.2f;
 
     private:
         std::vector<RigidBody> _bodies;

@@ -37,7 +37,7 @@ namespace VCX::Labs::RigidBody {
         RigidBody(mesh* m_ptr, double m, glm::mat3 I_ref);
 
         void SetX(glm::vec3 new_x){x = new_x;};
-        void SetQ(glm::quat new_q){q = new_q;};
+        void SetQ(glm::quat new_q){q = new_q; glm::mat3 R = glm::mat3_cast( q ); Iinv = R * IbodyInv * glm::transpose(R);};
         void SetV(glm::vec3 new_v){v = new_v;};
         void SetW(glm::vec3 new_w){w = new_w;};
 
@@ -55,6 +55,8 @@ namespace VCX::Labs::RigidBody {
         glm::mat3 GetIinv(){ return Iinv; }
 
         void Step(float dt);
+        void StepWV(float dt);
+        void StepQX(float dt);
 
         std::span<std::byte const> Mesh_Span() const;
 

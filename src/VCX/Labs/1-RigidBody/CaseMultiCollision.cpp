@@ -55,6 +55,17 @@ namespace VCX::Labs::RigidBody {
         _cameraManager.AutoRotate = false;
         _cameraManager.Save(_camera);
 
+        /* Init Other Object */
+        float gap = 20.f / (lenNum-1);
+        for (float x = -10.f; x <= 10.f; x += gap){
+            for (float z = -10.f; z <= 10.f; z += gap){
+                _masses.push_back({ mass });
+                _cubes.push_back({ 1.f, 1.f, 1.f });
+                _X.push_back({ x, 10.f, z });
+                _Q.push_back({ 1.f, 0.f, 0.f, 0.f });
+            }
+        }
+
         /* Construct RigidBody sys*/
         int idx = 0;
         std::vector<RigidBody> bodies;
@@ -101,12 +112,16 @@ namespace VCX::Labs::RigidBody {
     void CaseMultiCollision::OnSetupPropsUI(){
         ImGui::Text("Halo Halo");
         if (ImGui::Button("Reset")) Reset();
+        ImGui::SliderFloat("Coefficient c", &_rigidBodySys.c, 0.0f, 1.0f);
+        ImGui::SliderFloat("friction", &_rigidBodySys.friction, 0.f, 1.f);
+        ImGui::SliderFloat("Restitution", &_rigidBodySys.restitution, 0.f, 1.f);
     }
 
     Common::CaseRenderResult CaseMultiCollision::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
         /* Simulate */
+        _rigidBodySys.StepWV(Engine::GetDeltaTime());
         _rigidBodySys.Collision();
-        _rigidBodySys.Step(Engine::GetDeltaTime());
+        _rigidBodySys.StepQX(Engine::GetDeltaTime());
         // rendering
         _frame.Resize(desiredSize);
 
