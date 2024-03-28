@@ -6,16 +6,19 @@ namespace VCX::Labs::RigidBody {
         _program(
             Engine::GL::UniqueProgram({ Engine::GL::SharedShader("assets/shaders/flat.vert"),
                                         Engine::GL::SharedShader("assets/shaders/flat.frag") })),
-        _boxItem1(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Triangles),
-        _lineItem1(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Lines),
-        _boxItem2(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Triangles),
-        _lineItem2(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Lines)
+        _boxItem(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Triangles),
+        _lineItem(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Lines)
         {
-            _lineItem1.UpdateElementBuffer(line_index1);
-            _boxItem1.UpdateElementBuffer(tri_index1);
+            std::vector<std::uint32_t> line_index;
+            std::vector<std::uint32_t> tri_index;
+            
+            for (auto index : line_index1) line_index.push_back(index);
+            for (auto index : tri_index1)  tri_index.push_back(index);
+            for (auto index : line_index2) line_index.push_back( index+position1.size() ); 
+            for (auto index : tri_index2)  tri_index.push_back( index+position1.size() ); 
 
-            _lineItem2.UpdateElementBuffer(line_index2);
-            _boxItem2.UpdateElementBuffer(tri_index2);
+            _lineItem.UpdateElementBuffer(line_index);
+            _boxItem.UpdateElementBuffer(tri_index);
 
 
             /* Construct RigidBody */
@@ -61,7 +64,9 @@ namespace VCX::Labs::RigidBody {
     void CaseTwoCollision::Render(
                 Engine::GL::UniqueIndexedRenderItem& item, 
                 glm::vec3 const& color, 
-                std::span<std::byte const> const& span_bytes){
+                std::vector<glm::vec3> const& poses){
+        auto span_bytes = Engine::make_span_bytes<glm::vec3>(poses);
+
         _program.GetUniforms().SetByName("u_Color", color);
         item.UpdateVertexBuffer("position", span_bytes);
         item.Draw({ _program.Use() });
@@ -202,12 +207,13 @@ namespace VCX::Labs::RigidBody {
         glLineWidth(.5f);
 
         /* Draw */
-        auto span_bytes = _rigidbody[0].Mesh_Span();
-        Render(_boxItem1, _boxColor, span_bytes);
-        Render(_lineItem1, _lineColor, span_bytes);
-        span_bytes = _rigidbody[1].Mesh_Span();
-        Render(_boxItem2, _boxColor, span_bytes);
-        Render(_lineItem2, _lineColor, span_bytes);
+        auto poses1 = _rigidbody[0].Get_Poses();
+        auto poses2 = _rigidbody[1].Get_Poses();
+        std::vector<glm::vec3> poses;
+        for (auto item : poses1) poses.push_back(item);
+        for (auto item : poses2) poses.push_back(item);
+        Render(_boxItem, _boxColor, poses);
+        Render(_lineItem, _lineColor, poses);
 
 
         glLineWidth(1.f);

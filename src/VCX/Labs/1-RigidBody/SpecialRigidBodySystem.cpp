@@ -224,4 +224,14 @@ namespace VCX::Labs::RigidBody{
     void SpecialRigidBodySystem::StepQX(const float dt){
         for (auto& item : _bodies) item.StepQX(dt);
     }
+
+    std::span<const std::byte> SpecialRigidBodySystem::Mesh_Span() const{
+        std::vector<glm::vec3> poses;
+        for (auto item : _bodies){
+            auto tmp = item.Get_Poses();
+            poses.insert(poses.end(), tmp.begin(), tmp.end());
+        }
+        auto span_bytes = Engine::make_span_bytes<glm::vec3>(poses);
+        return span_bytes;
+    }
 }

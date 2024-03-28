@@ -2,8 +2,8 @@
 
 namespace VCX::Labs::RigidBody {
     RigidBody AddCube(int& idx, float mass, float x, float y, float z, 
-            std::vector<Engine::GL::UniqueIndexedRenderItem>& _boxItems, 
-            std::vector<Engine::GL::UniqueIndexedRenderItem>& _lineItems){
+            std::vector<std::uint32_t>& _line_index, 
+            std::vector<std::uint32_t>& _tri_index){
         x /= 2; y /= 2; z /= 2;
         const std::vector<glm::vec3>    positions = {
             {-x,  y,  z},
@@ -25,12 +25,10 @@ namespace VCX::Labs::RigidBody {
         const std::vector<std::uint32_t> tri_index  = { 0, 1, 2, 0, 2, 3, 1, 4, 0, 1, 4, 5, 1, 6, 5, 1, 2, 6, 2, 3, 7, 2, 6, 7, 0, 3, 7, 0, 4, 7, 4, 5, 6, 4, 6, 7 };
 
         /* Update render part */
-        idx = _boxItems.size();
-        _boxItems.push_back({ Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Triangles });
-        _lineItems.push_back({ Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Lines });
-
-        _boxItems[idx].UpdateElementBuffer(tri_index);
-        _lineItems[idx].UpdateElementBuffer(line_index);
+        int line_gap = _line_index.size() / 3;
+        int tri_gap  = 2 * _tri_index.size() / 9;
+        for (auto index : line_index) _line_index.push_back(index + line_gap);
+        for (auto index : tri_index)  _tri_index.push_back(index + tri_gap);
 
         /* Get I */
         glm::mat3 Ibody = {
@@ -50,21 +48,30 @@ namespace VCX::Labs::RigidBody {
     CaseMultiCollision::CaseMultiCollision():
         _program(
             Engine::GL::UniqueProgram({ Engine::GL::SharedShader("assets/shaders/flat.vert"),
-                                        Engine::GL::SharedShader("assets/shaders/flat.frag") }))
+                                        Engine::GL::SharedShader("assets/shaders/flat.frag") })),
+        _boxItem(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Triangles),
+        _lineItem(Engine::GL::VertexLayout().Add<glm::vec3>("position", Engine::GL::DrawFrequency::Stream, 0), Engine::GL::PrimitiveType::Lines)
         {
         _cameraManager.AutoRotate = false;
         _cameraManager.Save(_camera);
 
         /* Init Other Object */
-        float gap = 20.f / (lenNum-1);
-        for (float x = -10.f; x <= 10.f; x += gap){
-            for (float z = -10.f; z <= 10.f; z += gap){
-                _masses.push_back({ mass });
-                _cubes.push_back({ 1.f, 1.f, 1.f });
-                _X.push_back({ x, 10.f, z });
-                _Q.push_back({ 1.f, 0.f, 0.f, 0.f });
+        int times = 0;
+        float gap = 8.f / (lenNum-1), dz = 1.5f;
+        while(times < 3){
+            for (float x = -4.f; x <= 4.f; x += gap){
+                for (float z = -4.f; z <= 4.f; z += gap){
+                    _masses.push_back({ mass });
+                    _cubes.push_back({ 1.f, 1.f, 1.f });
+                    _X.push_back({ x, 10.f + times*dz, z });
+                    _Q.push_back({ 1.f, 0.f, 0.f, 0.f });
+                }
             }
+            times += 1;
         }
+
+        /* Init Render index */
+        std::vector<uint32_t> line_index, tri_index;
 
         /* Construct RigidBody sys*/
         int idx = 0;
@@ -72,13 +79,17 @@ namespace VCX::Labs::RigidBody {
         std::vector<CollisionGeometryPtr_t> _geoptr;
         for (int i = 0; i < _masses.size(); ++i){
             glm::vec3 cube = _cubes[i];
-            auto item = AddCube(idx, _masses[i], cube.x, cube.y, cube.z, _boxItems, _lineItems);
+            auto item = AddCube(idx, _masses[i], cube.x, cube.y, cube.z, line_index, tri_index);
             bodies.push_back( item );
             _geoptr.push_back( std::make_shared<fcl::Box<float>>(cube.x, cube.y, cube.z) );
         }
 
         _rigidBodySys = RigidBodySys(bodies, _geoptr, _X, _Q);
         Reset();
+
+        /* Update Render Element buffer */
+        _lineItem.UpdateElementBuffer(line_index);
+        _boxItem.UpdateElementBuffer(tri_index);
     }
 
     void CaseMultiCollision::Render(   
@@ -90,18 +101,10 @@ namespace VCX::Labs::RigidBody {
         item.Draw({ _program.Use() });
     }
 
-    void CaseMultiCollision::Render(
-            std::uint32_t idx, 
-            glm::vec3 const& boxColor, 
-            glm::vec3 const& lineColor){
-        auto span_bytes = _rigidBodySys[idx].Mesh_Span();
-        Render(_boxItems[idx], boxColor, span_bytes);
-        Render(_lineItems[idx], lineColor, span_bytes);
-    }
-
     void CaseMultiCollision::RenderAll(){
-        for(std::uint32_t idx = 0; idx < _boxItems.size(); ++idx)
-            Render(idx, _boxColor, _lineColor);
+        auto span_bytes = _rigidBodySys.Mesh_Span();
+        Render(_boxItem, _boxColor, span_bytes);
+        Render(_lineItem, _lineColor, span_bytes);
     }
     
     void CaseMultiCollision::Reset(){

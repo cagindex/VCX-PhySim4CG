@@ -28,11 +28,9 @@ namespace VCX::Labs::RigidBody {
         virtual void                     OnProcessInput(ImVec2 const & pos) override;
 
         void                             Render(Engine::GL::UniqueIndexedRenderItem& item, glm::vec3 const& color, std::span<std::byte const> const& span_bytes);
-        void                             Render(std::uint32_t , glm::vec3 const&, glm::vec3 const&); // Render and upload vertex positions
         void                             RenderAll();
 
         void                             Reset();
-        void                             Reconstruct();
 
         void                             HandleKey(ImGuiKey value, bool& t, glm::vec3 const& f);
 
@@ -42,8 +40,8 @@ namespace VCX::Labs::RigidBody {
         Engine::Camera                      _camera { .Eye = glm::vec3(-3, 3, 3) };
         MyOrbitCameraManager                _cameraManager;
 
-        std::vector<Engine::GL::UniqueIndexedRenderItem> _boxItems;
-        std::vector<Engine::GL::UniqueIndexedRenderItem> _lineItems;
+        Engine::GL::UniqueIndexedRenderItem _boxItem;
+        Engine::GL::UniqueIndexedRenderItem _lineItem;
 
 		/* cubes List */
         std::vector<float>                  _masses = {
@@ -71,12 +69,12 @@ namespace VCX::Labs::RigidBody {
         glm::vec3 const gravity = {0.f, -9.8f, 0.f};
 
         /* Player part */
-        glm::vec3 const drag_force_x = {5.f, 0.f, 0.f};
-        glm::vec3 const drag_force_y = {0.f, 5.f, 0.f};
-        glm::vec3 const drag_force_z = {0.f, 0.f, 5.f};
+        glm::vec3 const drag_force_x = {10.f, 0.f, 0.f};
+        glm::vec3 const drag_force_y = {0.f, 10.f, 0.f};
+        glm::vec3 const drag_force_z = {0.f, 0.f, 10.f};
 
         /* Scene */
         float mass = 1.f;
-        int lenNum = 14;
+        int lenNum = 6;
 	};
 }

@@ -59,6 +59,7 @@ namespace VCX::Labs::RigidBody {
         void StepQX(float dt);
 
         std::span<std::byte const> Mesh_Span() const;
+        std::vector<glm::vec3> Get_Poses() const;
 
     // private:
         /* Constant quantities */

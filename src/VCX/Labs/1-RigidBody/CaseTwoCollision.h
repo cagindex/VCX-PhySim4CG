@@ -24,7 +24,7 @@ namespace VCX::Labs::RigidBody {
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
         virtual void                     OnProcessInput(ImVec2 const & pos) override;
 
-        void                             Render(Engine::GL::UniqueIndexedRenderItem& item, glm::vec3 const& color, std::span<std::byte const> const& span_bytes);
+        void                             Render(Engine::GL::UniqueIndexedRenderItem& item, glm::vec3 const& color, std::vector<glm::vec3> const& poses);
         void                             Reset();
 
         void                             Collision();
@@ -35,11 +35,8 @@ namespace VCX::Labs::RigidBody {
         Engine::Camera                      _camera { .Eye = glm::vec3(-3, 3, 3) };
         Common::OrbitCameraManager          _cameraManager;
 
-        Engine::GL::UniqueIndexedRenderItem _boxItem1;
-        Engine::GL::UniqueIndexedRenderItem _lineItem1;
-
-        Engine::GL::UniqueIndexedRenderItem _boxItem2;
-        Engine::GL::UniqueIndexedRenderItem _lineItem2;
+        Engine::GL::UniqueIndexedRenderItem _boxItem;
+        Engine::GL::UniqueIndexedRenderItem _lineItem;
 
 		/* cubes */
         float mass[2] = {1.f, 1.f};

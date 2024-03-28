@@ -29,6 +29,8 @@ namespace VCX::Labs::RigidBody {
 
         RigidBody& operator [] (int idx) { return _bodies[idx]; }
 
+        std::span<const std::byte> Mesh_Span() const;
+
 
         float c = 0.5; // will be defined later
         float restitution 	= 0.5f;                 // for collision

@@ -37,6 +37,7 @@ namespace VCX::Labs::RigidBody
         }
 
     std::span<std::byte const> RigidBody::Mesh_Span() const { return mesh_ptr->Span_Bytes(x, q); }
+    std::vector<glm::vec3>     RigidBody::Get_Poses() const { return mesh_ptr->GetMesh(x, q); }
 
     void RigidBody::Step(float dt){
         /* Update w and v */
