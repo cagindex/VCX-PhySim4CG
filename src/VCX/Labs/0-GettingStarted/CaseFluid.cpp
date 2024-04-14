@@ -38,7 +38,7 @@ namespace VCX::Labs::GettingStarted {
         _lineprogram.GetUniforms().SetByName("u_Color",  glm::vec3(1.0f));
         _BoundaryItem.UpdateElementBuffer(line_index);
         ResetSystem();
-        _sphere = Engine::Model(Engine::Sphere(6,_r));
+        _sphere = Engine::Model{.Mesh = Engine::Sphere(6,_r), .MaterialIndex = 0};
     }
 
     void CaseFluid::OnSetupPropsUI() {
