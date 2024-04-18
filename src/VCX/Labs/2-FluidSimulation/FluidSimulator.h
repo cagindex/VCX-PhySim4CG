@@ -8,6 +8,10 @@
 #include <utility>
 #include <vector>
 
+#define SOLID_CELL 0
+#define AIR_CELL 2
+#define FLUID_CELL 1
+
 
 namespace VCX::Labs::Fluid {
     struct Simulator {
@@ -16,15 +20,15 @@ namespace VCX::Labs::Fluid {
         std::vector<glm::vec3> m_particleColor;
 
         float m_fRatio;
-        int   m_iCellX;
+        int   m_iCellX; 
         int   m_iCellY;
         int   m_iCellZ;
-        float m_h;
+        float m_h; // cell width
         float m_fInvSpacing;
-        int   m_iNumCells;
+        int   m_iNumCells; // cell number
 
-        int   m_iNumSpheres;
-        float m_particleRadius;
+        int   m_iNumSpheres; // particles number
+        float m_particleRadius; // particle radius
 
         std::vector<glm::vec3> m_vel;
         std::vector<glm::vec3> m_pre_vel;
@@ -42,7 +46,7 @@ namespace VCX::Labs::Fluid {
         std::vector<float> m_particleDensity; // Particle Density per cell, saved in the grid cell
         float              m_particleRestDensity;
 
-        glm::vec3 gravity { 0, -9.81f, 0 };
+        glm::vec3 gravity { 0.f, -9.78f, 0 };
 
         void integrateParticles(float timeStep);
         void pushParticlesApart(int numIters);
@@ -53,14 +57,13 @@ namespace VCX::Labs::Fluid {
         void        solveIncompressibility(int numIters, float dt, float overRelaxation, bool compensateDrift);
         void        updateParticleColors();
         inline bool isValidVelocity(int i, int j, int k, int dir);
-        inline int  index2GridOffset(glm::ivec3 index);
-
+        inline int  index2GridOffset(glm::ivec3 index);        
         void SimulateTimestep(float const dt) {
             int   numSubSteps       = 1;
             int   numParticleIters  = 5;
-            int   numPressureIters  = 30;
+            int   numPressureIters  = 100;
             bool  separateParticles = true;
-            float overRelaxation    = 0.5;
+            float overRelaxation    = 1.9;
             bool  compensateDrift   = true;
 
             float     flipRatio = m_fRatio;
