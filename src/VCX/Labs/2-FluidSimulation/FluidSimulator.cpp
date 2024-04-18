@@ -256,7 +256,7 @@ namespace VCX::Labs::Fluid{
 
                 d[6] = tx*ty*tz;
                 neib[6] = index2GridOffset({ x1, y1, z1 });
-                
+
                 d[7] = sx*ty*tz;
                 neib[7] = index2GridOffset({ x0, y1, z1 });
 
@@ -301,14 +301,13 @@ namespace VCX::Labs::Fluid{
 
                         float flipV = v + corr;
                         m_particleVel[i][_i_] = (1.0 - flipRatio) * picV + flipRatio * flipV;
-                        // m_particleVel[i][_i_] = picV;
                     }
                 }
             }
 
             /* Solid Neib */
             if (toGrid){
-                for (int i = 0; i < m_iNumSpheres; ++i){
+                for (int i = 0; i < m_iNumCells; ++i){
                     if (m_near_num[component][i] > 0.0){
                         m_vel[i][component] /= m_near_num[component][i];
                     }
@@ -451,5 +450,27 @@ namespace VCX::Labs::Fluid{
     inline bool Simulator::isValidVelocity(int i, int j, int k, int dir){}
     inline int Simulator::index2GridOffset(glm::ivec3 index){
         return ((index.x * m_iCellY) + index.y)*m_iCellZ + index.z;
+    }
+
+    void Simulator::updateSolidCells(glm::vec3 obstaclePos, float r){
+        glm::vec3 _min = -glm::vec3(0.5f);
+        for (int i = 1; i < m_iCellX-2; ++i){
+            for (int j = 1; j < m_iCellY-2; ++j){
+                for (int k = 1; k < m_iCellZ-2; ++k){
+                    int index = index2GridOffset({ i, j, k });
+                    glm::vec3 pos = _min + glm::vec3(i*m_h, j*m_h, k*m_h);
+
+                    float dx = (pos.x - obstaclePos.x);
+                    float dy = (pos.y - obstaclePos.y);
+                    float dz = (pos.z - obstaclePos.z);
+                    float dis2 = dx * dx + dy * dy + dz * dz;
+
+                    m_s[index] = 1.f;
+                    if (dis2 < r*r){
+                        m_s[index] = 0.f;
+                    }
+                }
+            }
+        }
     }
 }

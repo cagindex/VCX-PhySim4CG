@@ -50,7 +50,10 @@ namespace VCX::Labs::Fluid {
 
         ImGui::Spacing();
         ImGui::SliderFloat("FRatio", &_fRatio, 0.f, 1.f);
-        _simulation.m_fRatio = _fRatio;
+            _simulation.m_fRatio = _fRatio;
+        ImGui::SliderFloat("ObstacleRadius", &_obstacleRadius, 0.f, 0.3f);
+            _obstacle = Engine::Model{.Mesh = Engine::Sphere(6, _obstacleRadius), .MaterialIndex = 0};
+            _simulation.m_obstacleRadius = _obstacleRadius;
     }
 
 
@@ -60,6 +63,7 @@ namespace VCX::Labs::Fluid {
             _sceneObject.ReplaceScene(GetScene(_sceneIdx));
             _cameraManager.Save(_sceneObject.Camera);
         }
+        OnProcessMouseControl(_cameraManager.getMouseMove());
         if (! _stopped) _simulation.SimulateTimestep(Engine::GetDeltaTime());
         
         _BoundaryItem.UpdateVertexBuffer("position", Engine::make_span_bytes<glm::vec3>(vertex_pos));
@@ -93,6 +97,10 @@ namespace VCX::Labs::Fluid {
         auto const & material    = _sceneObject.Materials[0];
         m.Mesh.Draw({ material.Albedo.Use(),  material.MetaSpec.Use(), material.Height.Use(),_program.Use() },
             _sphere.Mesh.Indices.size(), 0, numofSpheres);
+
+        Rendering::ModelObject n = Rendering::ModelObject(_obstacle, _simulation.m_obstaclePos, _simulation.m_obstacleColor);
+        n.Mesh.Draw({ material.Albedo.Use(),  material.MetaSpec.Use(), material.Height.Use(),_program.Use() },
+            _obstacle.Mesh.Indices.size(), 0, 1);
         
         glDepthFunc(GL_LEQUAL);
         glDepthFunc(GL_LESS);
@@ -109,11 +117,17 @@ namespace VCX::Labs::Fluid {
     void CaseFluid::OnProcessInput(ImVec2 const& pos) {
         _cameraManager.ProcessInput(_sceneObject.Camera, pos);
     }
+    void CaseFluid::OnProcessMouseControl(glm::vec3 mouseDelta) {
+        _simulation.m_obstaclePos[0] += mouseDelta * 0.1f;
+        _simulation.m_obstacleVel = mouseDelta / Engine::GetDeltaTime();
+    }
+
 
     void CaseFluid::ResetSystem(){
         _simulation.setupScene(_res);
         numofSpheres = _simulation.m_iNumSpheres;
         _r = _simulation.m_particleRadius;
+        _simulation.m_obstacleRadius = _obstacleRadius;
 
         // glm::vec3 tank(1.0f);
         // glm::vec3 relWater = {0.6f, 0.8f, 0.6f};

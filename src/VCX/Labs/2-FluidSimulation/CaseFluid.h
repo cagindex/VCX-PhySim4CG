@@ -24,6 +24,8 @@ namespace VCX::Labs::Fluid {
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
         virtual void                     OnProcessInput(ImVec2 const & pos) override;
 
+        void OnProcessMouseControl(glm::vec3 mourseDelta);
+
     private:
         std::vector<Assets::ExampleScene> const _scenes;
 
@@ -47,8 +49,10 @@ namespace VCX::Labs::Fluid {
         float                               _BndWidth { 2.0 };
         bool                                _stopped { false };
         Engine::Model                       _sphere;
+        Engine::Model                       _obstacle;
         int                                 _res { 16 };
         float                               _r;
+        float                               _obstacleRadius { 0.2 };
         float                               _fRatio { 0.95 };
         int                                 numofSpheres;
         Fluid::Simulator                    _simulation;
