@@ -7,6 +7,8 @@
 namespace VCX::Labs::FSM {
     Eigen::SparseMatrix<float> GetMatrix_L (MassSpringSystem const &);
     Eigen::SparseMatrix<float> GetMatrix_J (MassSpringSystem const &);
+    Eigen::SparseMatrix<float> GetMatrix_M (MassSpringSystem const &);
+    Eigen::VectorXf GetVector_b (MassSpringSystem const & system, Eigen::VectorXf const &, Eigen::VectorXf const &, float);
 
     void FastMassSpringSimulation(MassSpringSystem & , float const);
 }
