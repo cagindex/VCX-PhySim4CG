@@ -13,7 +13,7 @@ namespace VCX::Labs::FSM {
         FSMSolver ();
 
         void Reset(MassSpringSystem const &, float, int);
-        void Solve(MassSpringSystem const &);
+        void Solve(MassSpringSystem &);
         void Step (MassSpringSystem &);
     
         Eigen::SparseMatrix<float> L, J, M;
@@ -23,6 +23,7 @@ namespace VCX::Labs::FSM {
 
         Eigen::VectorXf            f_ext;
         Eigen::VectorXf            x, v;
+        Eigen::VectorXf            prev_x;
 
         float                      dt;
         int                        iters;

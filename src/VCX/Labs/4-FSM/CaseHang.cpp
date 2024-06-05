@@ -1,11 +1,11 @@
 #include "Engine/app.h"
-#include "Labs/4-FSM/CaseFSM.h"
+#include "Labs/4-FSM/CaseHang.h"
 #include "Labs/Common/ImGuiHelper.h"
 
 #include <iostream>
 
 namespace VCX::Labs::FSM {
-    CaseFSM::CaseFSM() :
+    CaseHang::CaseHang() :
         _program(
             Engine::GL::UniqueProgram({
                 Engine::GL::SharedShader("assets/shaders/flat.vert"),
@@ -19,15 +19,15 @@ namespace VCX::Labs::FSM {
         ResetSystem();
     }
 
-    void CaseFSM::OnSetupPropsUI() {
+    void CaseHang::OnSetupPropsUI() {
         if (ImGui::CollapsingHeader("Algorithm", ImGuiTreeNodeFlags_DefaultOpen)) {
             if (ImGui::Button("Reset System")) ResetSystem();
             ImGui::SameLine();
             if (ImGui::Button(_stopped ? "Start Simulation" : "Stop Simulation")) _stopped = ! _stopped;
             ImGui::SliderFloat("Part. Mass", &_massSpringSystem.Mass, .5f, 10.f);
             ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 100.f, 3000.f);
-            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.f, 1.f);
-            ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, .1f, 1.f);
+            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.9f, 1.f);
+            ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, 1.f, 10.f);
         }
         ImGui::Spacing();
 
@@ -40,7 +40,7 @@ namespace VCX::Labs::FSM {
         ImGui::Spacing();
     }
 
-    Common::CaseRenderResult CaseFSM::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
+    Common::CaseRenderResult CaseHang::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
         if (! _stopped){
             _FSMSolver.Solve(_massSpringSystem);
             _FSMSolver.Step(_massSpringSystem);
@@ -78,16 +78,16 @@ namespace VCX::Labs::FSM {
         };
     }
 
-    void CaseFSM::OnProcessInput(ImVec2 const & pos) {
+    void CaseHang::OnProcessInput(ImVec2 const & pos) {
         _cameraManager.ProcessInput(_camera, pos);
     }
 
-    void CaseFSM::ResetSystem() {
+    void CaseHang::ResetSystem() {
         // _massSpringSystem = { };
         _massSpringSystem.Springs.clear();
         _massSpringSystem.Positions.clear();
         _massSpringSystem.Velocities.clear();
-        std::size_t const n = 29;
+        std::size_t const n = 33;
         float const delta = 2.f / n;
         auto constexpr GetID = [](std::size_t const i, std::size_t const j) { return i * (n + 1) + j; };
         for (std::size_t i = 0; i <= n; i++) {

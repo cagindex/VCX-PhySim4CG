@@ -50,39 +50,23 @@ namespace VCX::Labs::FSM {
         std::size_t m = system.Positions.size();
         Eigen::SparseMatrix<float> L( 3*m, 3*m );
 
-        Eigen::SparseMatrix<float> A(   m,   m ),
-                                 tmp(   m,   m );
-        std::vector<Eigen::Triplet<float>> triplets{ {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+        std::vector<Eigen::Triplet<float>> triplets;
 
-        // A
         float k  = system.Stiffness;
         for (auto spring : system.Springs) {
             int i1 = spring.AdjIdx.first;
             int i2 = spring.AdjIdx.second;
 
-            triplets[0] = { i1, i1, k };
-            triplets[1] = { i1, i2, -k };
-            triplets[2] = { i2, i1, -k };
-            triplets[3] = { i2, i2, k };
-
-            tmp.setFromTriplets(triplets.begin(), triplets.end());
-            A += tmp;
-            tmp.setZero();
-        }
-
-        // L
-        for (int j = 0; j < A.outerSize(); ++j)
-        {
-            for (Eigen::SparseMatrix<float>::InnerIterator it(A, j); it; ++it)
+            for (int j = 0; j < 3; ++j)
             {
-                auto r = it.row(), c = it.col();
-                float value = it.value();
-                L.insert(3*r   , 3*c   ) = value;
-                L.insert(3*r+1 , 3*c+1 ) = value;
-                L.insert(3*r+2 , 3*c+2 ) = value;
+                triplets.push_back({ 3*i1+j, 3*i1+j, k });
+                triplets.push_back({ 3*i1+j, 3*i2+j, -k });
+                triplets.push_back({ 3*i2+j, 3*i1+j, -k });
+                triplets.push_back({ 3*i2+j, 3*i2+j, k });
             }
         }
-        
+        L.setFromTriplets( triplets.begin(), triplets.end() );
+
         return L;
     }
 
@@ -96,40 +80,23 @@ namespace VCX::Labs::FSM {
         std::size_t s = system.Springs.size();
         Eigen::SparseMatrix<float> J( 3*m, 3*s );
 
-        Eigen::SparseMatrix<float> A(   m,   s ),
-                                 tmp(   m,   s );
-        std::vector<Eigen::Triplet<float>> triplets{ {0, 0, 0}, {0, 0, 0} };
+        std::vector<Eigen::Triplet<float>> triplets;
 
-        // A
+        int count = 0;
         float k  = system.Stiffness;
-        for (int i = 0; i < s; ++i)
-        {
-            auto spring = system.Springs[i];
-
+        for (auto spring : system.Springs) {
             int i1 = spring.AdjIdx.first;
             int i2 = spring.AdjIdx.second;
 
-            triplets[0] = { i1, i, k };
-            triplets[1] = { i2, i, -k };
-
-            tmp.setFromTriplets(triplets.begin(), triplets.end());
-            A += tmp;
-            tmp.setZero();
-        }
-
-        // J
-        for (int j = 0; j < A.outerSize(); ++j)
-        {
-            for (Eigen::SparseMatrix<float>::InnerIterator it(A, j); it; ++it)
+            for (int j = 0; j < 3; ++j)
             {
-                auto r = it.row(), c = it.col();
-                float value = it.value();
-                J.insert(3*r   , 3*c   ) = value;
-                J.insert(3*r+1 , 3*c+1 ) = value;
-                J.insert(3*r+2 , 3*c+2 ) = value;
+                triplets.push_back({ 3*i1+j, 3*count+j, k });
+                triplets.push_back({ 3*i2+j, 3*count+j, -k });
             }
+            count++;
         }
-        
+        J.setFromTriplets( triplets.begin(), triplets.end() );
+
         return J;
     }
 

@@ -14,12 +14,12 @@ namespace VCX::Labs::FSM {
         std::vector<glm::vec3>      Positions;
         std::vector<glm::vec3>      Velocities;
         std::vector<int>            Fixed;
-        float                       Mass { .25f };
+        float                       Mass { .25f /(33*33) };
 
         std::vector<Spring>         Springs;
-        float                       Stiffness { 3000 };
-        float                       Damping   { 1.f };
-        float                       Gravity   { 9.8f };
+        float                       Stiffness { 1.f };
+        float                       Damping   { 0.993f };
+        float                       Gravity   { 9.8f * (.25f/(33*33)) };
 
         Eigen::SparseMatrix<float>  L, J, M;
 

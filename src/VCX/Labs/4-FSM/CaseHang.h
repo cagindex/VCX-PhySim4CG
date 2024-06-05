@@ -14,11 +14,11 @@
 #include "Labs/4-FSM/FSMSolver.h"
 
 namespace VCX::Labs::FSM {
-    class CaseFSM : public Common::ICase {
+    class CaseHang : public Common::ICase {
     public:
-        CaseFSM();
+        CaseHang();
 
-        virtual std::string_view const GetName() override { return "Mass-Spring System"; }
+        virtual std::string_view const GetName() override { return "Case Hang"; }
         
         virtual void OnSetupPropsUI() override;
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;

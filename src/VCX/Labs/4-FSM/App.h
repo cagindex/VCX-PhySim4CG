@@ -3,7 +3,8 @@
 #include <vector>
 
 #include "Engine/app.h"
-#include "Labs/4-FSM/CaseFSM.h"
+#include "Labs/4-FSM/CaseHang.h"
+#include "Labs/4-FSM/CaseDrop.h"
 #include "Labs/Common/UI.h"
 
 namespace VCX::Labs::FSM {
@@ -11,11 +12,12 @@ namespace VCX::Labs::FSM {
     private:
         Common::UI _ui;
 
-        CaseFSM      _caseFSM;
+        CaseHang      _caseHang;
+        CaseDrop      _caseDrop;
         
         std::size_t _caseId = 0;
 
-        std::vector<std::reference_wrapper<Common::ICase>> _cases = { _caseFSM };
+        std::vector<std::reference_wrapper<Common::ICase>> _cases = { _caseHang, _caseDrop };
 
     public:
         App();
