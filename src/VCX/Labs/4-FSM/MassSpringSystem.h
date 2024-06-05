@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <Eigen/Sparse>
 
 namespace VCX::Labs::FSM {
     struct MassSpringSystem {
@@ -16,9 +17,11 @@ namespace VCX::Labs::FSM {
         float                       Mass { 1.f };
 
         std::vector<Spring>         Springs;
-        float                       Stiffness { 100 };
-        float                       Damping   { .2f };
-        float                       Gravity   { .3f };
+        float                       Stiffness { 3000 };
+        float                       Damping   { .999f };
+        float                       Gravity   { 9.8f };
+
+        Eigen::SparseMatrix<float>  L, J, M;
 
 
         void AddParticle(glm::vec3 const & position, glm::vec3 const & velocity = glm::vec3(0)) {

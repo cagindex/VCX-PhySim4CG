@@ -11,6 +11,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
+#include "Labs/4-FSM/FSMSolver.h"
+
 namespace VCX::Labs::FSM {
     class CaseFSM : public Common::ICase {
     public:
@@ -36,6 +38,7 @@ namespace VCX::Labs::FSM {
         bool                                    _stopped       { false };
 
         MassSpringSystem                        _massSpringSystem;
+        FSMSolver                               _FSMSolver;
 
         void ResetSystem();
     };

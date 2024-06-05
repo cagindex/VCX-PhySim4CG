@@ -2,6 +2,8 @@
 #include "Labs/4-FSM/CaseFSM.h"
 #include "Labs/Common/ImGuiHelper.h"
 
+#include <iostream>
+
 namespace VCX::Labs::FSM {
     CaseFSM::CaseFSM() :
         _program(
@@ -40,7 +42,8 @@ namespace VCX::Labs::FSM {
 
     Common::CaseRenderResult CaseFSM::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
         if (! _stopped){
-            FastMassSpringSimulation(_massSpringSystem, Engine::GetDeltaTime());
+            _FSMSolver.Solve(_massSpringSystem);
+            _FSMSolver.Step(_massSpringSystem);
         }
         
         _particlesItem.UpdateVertexBuffer("position", Engine::make_span_bytes<glm::vec3>(_massSpringSystem.Positions));
@@ -81,7 +84,7 @@ namespace VCX::Labs::FSM {
 
     void CaseFSM::ResetSystem() {
         _massSpringSystem = { };
-        std::size_t const n = 10;
+        std::size_t const n = 20;
         float const delta = 2.f / n;
         auto constexpr GetID = [](std::size_t const i, std::size_t const j) { return i * (n + 1) + j; };
         for (std::size_t i = 0; i <= n; i++) {
@@ -97,13 +100,17 @@ namespace VCX::Labs::FSM {
         }
         _massSpringSystem.Fixed[GetID(0, 0)] = true;
         _massSpringSystem.Fixed[GetID(0, n)] = true;
+
         // _massSpringSystem.Fixed[GetID(n, 0)] = true;
         // _massSpringSystem.Fixed[GetID(n, n)] = true;
+
         std::vector<std::uint32_t> indices;
         for (auto const & spring : _massSpringSystem.Springs) {
             indices.push_back(std::uint32_t(spring.AdjIdx.first));
             indices.push_back(std::uint32_t(spring.AdjIdx.second));
         }
         _springsItem.UpdateElementBuffer(indices);
+
+        _FSMSolver = FSMSolver (_massSpringSystem, Engine::GetDeltaTime(), 1);
     }
 }

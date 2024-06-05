@@ -1,5 +1,12 @@
-#include "Labs/4-FSM/FSM.h"
 #include <cmath>
+
+#include <iostream>
+#include <spdlog/spdlog.h>
+
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include "Labs/4-FSM/MassSpringSystem.h"
+// #include "CustomFunc.inl"
 
 namespace VCX::Labs::FSM {
     static Eigen::VectorXf glm2eigen(std::vector<glm::vec3> const & glm_v) {
@@ -12,7 +19,7 @@ namespace VCX::Labs::FSM {
     static std::vector<glm::vec3> eigen2glm(Eigen::VectorXf const & eigen_v) {
         return std::vector<glm::vec3>(
             reinterpret_cast<glm::vec3 const *> (eigen_v.data()),
-            reinterpret_cast<glm::vec3 cosnt *> (eigen_v.data() + eigen_v.size())
+            reinterpret_cast<glm::vec3 const *> (eigen_v.data() + eigen_v.size())
         );
     }
 
@@ -22,11 +29,25 @@ namespace VCX::Labs::FSM {
         return matLinearized;
     }
 
+    static void NormD (MassSpringSystem const & system, Eigen::VectorXf & d) {
+        std::size_t s = system.Springs.size();
+        for (std::size_t i = 0; i < s; i += 1)
+        {
+            float x = d(3*i+0), y = d(3*i+1), z = d(3*i+2);
+            float len = std::sqrt( x*x + y*y + z*z ); 
+            float restLen = system.Springs[i].RestLength;
+
+            d(3*i+0) = restLen * x / len;
+            d(3*i+1) = restLen * y / len;
+            d(3*i+2) = restLen * z / len;
+        }
+    }
+
     /**
      * L := (\sum_i k_i * A_i * A_i^T) \otimes I_3 | Shape (3m, 3m)
      * A := (\sum_i k_i * A_i * A_i^T)             | Shape ( m,  m)
     */
-    Eigen::SparseMatrix<float> GetMatrix_L (MassSpringSystem const & system) {
+    static Eigen::SparseMatrix<float> GetMatrix_L (MassSpringSystem const & system) {
         std::size_t m = system.Positions.size();
         Eigen::SparseMatrix<float> L( 3*m, 3*m );
 
@@ -37,8 +58,8 @@ namespace VCX::Labs::FSM {
         // A
         float k  = system.Stiffness;
         for (auto spring : system.Springs) {
-            std::size_t i1 = spring.AdjIdx.first;
-            std::size_t i2 = spring.AdjIdx.second;
+            int i1 = spring.AdjIdx.first;
+            int i2 = spring.AdjIdx.second;
 
             triplets[0] = { i1, i1, k };
             triplets[1] = { i1, i2, -k };
@@ -57,9 +78,9 @@ namespace VCX::Labs::FSM {
             {
                 auto r = it.row(), c = it.col();
                 float value = it.value();
-                L.insert(r      , c      ) = value;
-                L.insert(r +   m, c +   m) = value;
-                L.insert(r + 2*m, c + 2*m) = value;
+                L.insert(3*r   , 3*c   ) = value;
+                L.insert(3*r+1 , 3*c+1 ) = value;
+                L.insert(3*r+2 , 3*c+2 ) = value;
             }
         }
         
@@ -71,7 +92,7 @@ namespace VCX::Labs::FSM {
      * S_i := {\delta_ij}_j                    | Shape (s,)
      * A   := (\sum_i k_i A_i S_i^T)           | Shape ( m,  s)
     */
-    Eigen::SparseMatrix<float> GetMatrix_J (MassSpringSystem const & system) {
+    static Eigen::SparseMatrix<float> GetMatrix_J (MassSpringSystem const & system) {
         std::size_t m = system.Positions.size();
         std::size_t s = system.Springs.size();
         Eigen::SparseMatrix<float> J( 3*m, 3*s );
@@ -86,8 +107,8 @@ namespace VCX::Labs::FSM {
         {
             auto spring = system.Springs[i];
 
-            std::size_t i1 = spring.AdjIdx.first;
-            std::size_t i2 = spring.AdjIdx.second;
+            int i1 = spring.AdjIdx.first;
+            int i2 = spring.AdjIdx.second;
 
             triplets[0] = { i1, i, k };
             triplets[1] = { i2, i, -k };
@@ -104,77 +125,43 @@ namespace VCX::Labs::FSM {
             {
                 auto r = it.row(), c = it.col();
                 float value = it.value();
-                J.insert(r      , c      ) = value;
-                J.insert(r +   m, c +   s) = value;
-                J.insert(r + 2*m, c + 2*s) = value;
+                J.insert(3*r   , 3*c   ) = value;
+                J.insert(3*r+1 , 3*c+1 ) = value;
+                J.insert(3*r+2 , 3*c+2 ) = value;
             }
         }
         
         return J;
     }
 
-    Eigen::SparseMatrix<float> GetMatrix_M (MassSpringSystem const & system) {
+    static Eigen::SparseMatrix<float> GetMatrix_M (MassSpringSystem const & system) {
         std::size_t m = system.Positions.size();
         Eigen::SparseMatrix<float> M ( 3*m, 3*m );
         for (int i = 0; i < 3*m; ++i)
-            for (int j = 0; j < 3*m; ++j)
-                M.insert(i, j) = system.Mass;
+                M.insert(i, i) = system.Mass;
         return M;
     }
 
-    /**
-     * b := h^2 f_ext - M y
-     * y := q_n + h * v_n
-    */
-    Eigen::VectorXf GetVector_b (MassSpringSystem const & system, 
-                                 Eigen::VectorXf  const & x,
-                                 Eigen::VectorXf  const & v,
-                                 float                    ddt) {
-        std::size_t m = system.Positions.size();
+    static Eigen::VectorXf GetVector_d (MassSpringSystem const & system) {
+        std::vector<glm::vec3> springs;
+        for (auto spring : system.Springs){
+            glm::vec3 p1 = system.Positions[spring.AdjIdx.first];
+            glm::vec3 p2 = system.Positions[spring.AdjIdx.second];
 
-        Eigen::VectorXf my = system.Mass * (x + ddt * v);
-        Eigen::VectorXf f_ext ( 3*m );
-        for (int i = 0; i < 3*m; i += 3)
-        {
-            f_ext(i)   = 0.f;
-            f_ext(i+1) = system.Gravity;
-            f_ext(i+2) = 0.f;
+            springs.push_back( p1 - p2 );
+            // springs.push_back( spring.RestLength * p12 / glm::length(p12) );
         }
 
-        return ddt*ddt*f_ext - my;
+        Eigen::VectorXf d = glm2eigen( springs );
+        NormD(system, d);
+
+        return d;
     }
 
-    void NormD(MassSpringSystem & system, Eigen::VectorXf & d) {
-        std::size_t s = system.Springs.size();
-        for (std::size_t i = 0; i < 3*s; i += 3)
-        {
-            float x = d(i+0), y = d(i+1), z = d(i+2);
-            float len = std::sqrt( x*x + y*y + z*z ); 
-
-            d(i+0) = x / len;
-            d(i+1) = y / len;
-            d(i+2) = z / len;
-        }
-    }
-
-    void Update_d (Eigen::SparseMatrix<float> const & J,
-                   Eigen::VectorXf            const & x,
-                   Eigen::VectorXf                  & d,
-                   float                              lr) {
-        d -= lr * (-J.transpose() * x);
-    }
-
-    void Update_x (Eigen::SparseMatrix<float> const & L,
-                   Eigen::SparseMatrix<float> const & J,
-                   Eigen::VectorXf            const & d,
-                   Eigen::VectorXf            const & b,
-                   Eigen::VectorXf                  & x,
-                   float                              mass,
-                   float                              ddt,
-                   float                              lr) {
-        
-    }
-
-    void FastMassSpringSimulation(MassSpringSystem & system, float const dt) {
+    static Eigen::VectorXf ComputeSimplicialLLT(
+        Eigen::SparseMatrix<float> const & A,
+        Eigen::VectorXf const & b) {
+        auto solver = Eigen::SimplicialLLT<Eigen::SparseMatrix<float>>(A);
+        return solver.solve(b);
     }
 }
