@@ -6,7 +6,6 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include "Labs/4-FSM/MassSpringSystem.h"
-// #include "CustomFunc.inl"
 
 namespace VCX::Labs::FSM {
     static Eigen::VectorXf glm2eigen(std::vector<glm::vec3> const & glm_v) {
@@ -149,7 +148,6 @@ namespace VCX::Labs::FSM {
             glm::vec3 p2 = system.Positions[spring.AdjIdx.second];
 
             springs.push_back( p1 - p2 );
-            // springs.push_back( spring.RestLength * p12 / glm::length(p12) );
         }
 
         Eigen::VectorXf d = glm2eigen( springs );

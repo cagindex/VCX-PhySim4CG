@@ -25,8 +25,8 @@ namespace VCX::Labs::FSM {
             ImGui::SameLine();
             if (ImGui::Button(_stopped ? "Start Simulation" : "Stop Simulation")) _stopped = ! _stopped;
             ImGui::SliderFloat("Part. Mass", &_massSpringSystem.Mass, .5f, 10.f);
-            ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 10.f, 300.f);
-            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, .1f, 10.f);
+            ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 100.f, 3000.f);
+            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.f, 1.f);
             ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, .1f, 1.f);
         }
         ImGui::Spacing();
@@ -83,8 +83,11 @@ namespace VCX::Labs::FSM {
     }
 
     void CaseFSM::ResetSystem() {
-        _massSpringSystem = { };
-        std::size_t const n = 20;
+        // _massSpringSystem = { };
+        _massSpringSystem.Springs.clear();
+        _massSpringSystem.Positions.clear();
+        _massSpringSystem.Velocities.clear();
+        std::size_t const n = 29;
         float const delta = 2.f / n;
         auto constexpr GetID = [](std::size_t const i, std::size_t const j) { return i * (n + 1) + j; };
         for (std::size_t i = 0; i <= n; i++) {
@@ -111,6 +114,6 @@ namespace VCX::Labs::FSM {
         }
         _springsItem.UpdateElementBuffer(indices);
 
-        _FSMSolver = FSMSolver (_massSpringSystem, Engine::GetDeltaTime(), 1);
+        _FSMSolver.Reset(_massSpringSystem, 0.008, 10);
     }
 }
