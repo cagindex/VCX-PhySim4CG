@@ -21,10 +21,7 @@ namespace VCX::Labs::FSM {
         solver.compute( A );
 
         // Init f_ext
-        std::vector<glm::vec3> f;
-        for (auto pos : system.Positions)
-            f.push_back({ 0.f, -system.Gravity, 0.f });
-        f_ext = glm2eigen( f );
+        f_ext = glm2eigen( system.Forces );
 
         // Init x, v
         x = glm2eigen( system.Positions  ); 
@@ -43,9 +40,10 @@ namespace VCX::Labs::FSM {
     */
     void FSMSolver::Solve (MassSpringSystem & system) {
         float ddt = dt / iters;
+
+        x = glm2eigen(system.Positions);
         for (int i = 0; i < iters; ++i){
-            Eigen::VectorXf y = x + system.Damping * ddt * v;
-            // Eigen::VectorXf y = (system.Damping + 1) * x - system.Damping * prev_x;
+            Eigen::VectorXf y = (system.Damping + 1) * x - system.Damping * prev_x;
             prev_x = x;
 
             // Local Step
@@ -53,47 +51,13 @@ namespace VCX::Labs::FSM {
 
             // Global Step
             Eigen::VectorXf b = ddt*ddt*J*d + M*y + ddt*ddt*f_ext;
-            Eigen::VectorXf x_new = solver.solve(b);
-            Eigen::VectorXf v_new = (x_new - x) / ddt;
+            Eigen::VectorXf x = solver.solve(b);
 
-            std::vector<glm::vec3> pos_new = eigen2glm( x_new );
-            std::vector<glm::vec3> vel_new = eigen2glm( v_new );
-
-            for (std::size_t idx = 0; idx < system.Positions.size(); ++idx)
-            {
-                if (system.Fixed[idx] == true)
-                {
-                    pos_new[idx] = system.Positions[idx];
-                    vel_new[idx] = { 0.f, 0.f, 0.f };
-                }
-            }
-
-            system.Positions = pos_new;
-            system.Velocities = vel_new;
-
-
-            x = x_new; 
-            v = v_new;  
-        }
-    }
-
-    void FSMSolver::Step (MassSpringSystem & system) {
-        std::vector<glm::vec3> pos_new  = eigen2glm( x );
-        std::vector<glm::vec3> vel_new  = eigen2glm( v );
-
-        for (std::size_t idx = 0; idx < system.Positions.size(); ++idx)
-        {
-            if (system.Fixed[idx] == true)
-            {
-                pos_new[idx] = system.Positions[idx];
-                vel_new[idx] = { 0.f, 0.f, 0.f };
+            std::vector<glm::vec3> xx = eigen2glm(x);
+            for (std::size_t idx = 0; idx < system.Positions.size(); ++idx){
+                if (! system.Fixed[idx])
+                    system.Positions[idx] = xx[idx];
             }
         }
-
-        system.Positions = pos_new;
-        system.Velocities = vel_new;
-
-        x = glm2eigen(pos_new);
-        v = glm2eigen(vel_new);
     }
 }

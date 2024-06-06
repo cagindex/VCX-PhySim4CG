@@ -14,7 +14,6 @@ namespace VCX::Labs::FSM {
 
         void Reset(MassSpringSystem const &, float, int);
         void Solve(MassSpringSystem &);
-        void Step (MassSpringSystem &);
     
         Eigen::SparseMatrix<float> L, J, M;
         Eigen::SparseMatrix<float> A;

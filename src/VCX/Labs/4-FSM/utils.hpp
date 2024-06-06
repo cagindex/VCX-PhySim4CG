@@ -103,8 +103,12 @@ namespace VCX::Labs::FSM {
     static Eigen::SparseMatrix<float> GetMatrix_M (MassSpringSystem const & system) {
         std::size_t m = system.Positions.size();
         Eigen::SparseMatrix<float> M ( 3*m, 3*m );
-        for (int i = 0; i < 3*m; ++i)
-                M.insert(i, i) = system.Mass;
+        for (std::size_t idx = 0; idx < system.Mass.size(); ++idx){
+            int i = 3*idx;
+            M.insert(i, i) = system.Mass[idx];
+            M.insert(i+1, i+1) = system.Mass[idx];
+            M.insert(i+2, i+2) = system.Mass[idx];
+        }
         return M;
     }
 
@@ -128,5 +132,47 @@ namespace VCX::Labs::FSM {
         Eigen::VectorXf const & b) {
         auto solver = Eigen::SimplicialLLT<Eigen::SparseMatrix<float>>(A);
         return solver.solve(b);
+    }
+
+    static void SpringConstraint (MassSpringSystem & system, float tauc, int iters) {
+        while( iters-- ){
+            for (std::size_t idx = 0; idx < system.Springs.size(); ++idx){
+                auto spring = system.Springs[idx];
+                std::size_t i1 = spring.AdjIdx.first, i2 = spring.AdjIdx.second;
+
+                glm::vec3 p12 = system.Positions[i1] - system.Positions[i2];
+
+                float len = glm::length(p12);
+                float rlen = spring.RestLength;
+                float diff = (len - (1+tauc)*rlen) / len;
+                float rate = (len - rlen) / rlen;
+
+                if (rate <= tauc) continue;
+
+                float f1, f2;
+                f1 = f2 = 0.5f;
+
+                if (system.Fixed[i1]){ f1 = 0.f; f2 = 1.f; }
+                if (system.Fixed[i2]){
+                    f1 = (f1 != 0.0f ? 1.f : 0.f);
+                    f2 = 0.f;
+                }
+
+                system.Positions[i1] -= p12 * f1 * diff;
+                system.Positions[i2] += p12 * f2 * diff;
+            }
+        }
+    }
+
+    static void ShpereCollisionConstraint(MassSpringSystem & system, glm::vec3 const & center, float radius) {
+        for (std::size_t idx = 0; idx < system.Positions.size(); ++idx){
+            glm::vec3 pos = system.Positions[idx] - center;
+            if (glm::length(pos) < radius){
+                glm::vec3 norm_pos = glm::normalize(pos);
+                system.Positions[idx] = norm_pos * radius + center;
+            }
+            else continue;
+
+        }
     }
 }

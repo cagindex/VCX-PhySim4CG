@@ -23,6 +23,7 @@ namespace VCX::Labs::FSM {
         virtual void OnSetupPropsUI() override;
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
         virtual void OnProcessInput(ImVec2 const & pos) override;
+        void      OnProcessMouseControl(glm::vec3 mourseDelta);
     
     private:
         Engine::GL::UniqueProgram               _program;

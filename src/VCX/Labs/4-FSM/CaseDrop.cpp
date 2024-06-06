@@ -1,6 +1,7 @@
 #include "Engine/app.h"
 #include "Labs/4-FSM/CaseDrop.h"
 #include "Labs/Common/ImGuiHelper.h"
+#include "Labs/4-FSM/utils.hpp"
 
 #include <iostream>
 
@@ -24,10 +25,11 @@ namespace VCX::Labs::FSM {
             if (ImGui::Button("Reset System")) ResetSystem();
             ImGui::SameLine();
             if (ImGui::Button(_stopped ? "Start Simulation" : "Stop Simulation")) _stopped = ! _stopped;
-            ImGui::SliderFloat("Part. Mass", &_massSpringSystem.Mass, .5f, 10.f);
+            if (ImGui::Button(_collisionCheck ? "Stop" : "Start")) _collisionCheck = ! _collisionCheck;
+            ImGui::SliderFloat("Total. Mass", &_massSpringSystem.TotalMass, .5f, 10.f);
             ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 100.f, 3000.f);
             ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.9f, 1.f);
-            ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, 1.f, 10.f);
+            ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, 1.f, 100.f);
         }
         ImGui::Spacing();
 
@@ -43,22 +45,8 @@ namespace VCX::Labs::FSM {
     Common::CaseRenderResult CaseDrop::OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) {
         if (! _stopped){
             _FSMSolver.Solve(_massSpringSystem);
-            _FSMSolver.Step(_massSpringSystem);
-
-            for (std::size_t idx = 0; idx < _massSpringSystem.Positions.size(); ++idx)
-            {
-                glm::vec3 particle_pos = _massSpringSystem.Positions[idx];
-                glm::vec3 particle_vel = _massSpringSystem.Velocities[idx];
-                glm::vec3 dis          = particle_pos - center;
-
-                float length = glm::length( dis );
-                if (length < radius) // Collision happens
-                {
-                    glm::vec3 new_pos = center + radius * dis / length; 
-
-                    _massSpringSystem.Positions[idx] = new_pos;
-                }
-            }
+            ShpereCollisionConstraint(_massSpringSystem, _center, _radius);
+            SpringConstraint(_massSpringSystem, 0.12f, 15);
         }
         
         _particlesItem.UpdateVertexBuffer("position", Engine::make_span_bytes<glm::vec3>(_massSpringSystem.Positions));
@@ -102,16 +90,19 @@ namespace VCX::Labs::FSM {
         _massSpringSystem.Springs.clear();
         _massSpringSystem.Positions.clear();
         _massSpringSystem.Velocities.clear();
+        _massSpringSystem.Fixed.clear();
+        _massSpringSystem.Forces.clear();
+        _massSpringSystem.Mass.clear();
         std::size_t const n = 33;
         float const delta = 2.f / n;
         auto constexpr GetID = [](std::size_t const i, std::size_t const j) { return i * (n + 1) + j; };
         for (std::size_t i = 0; i <= n; i++) {
             for (std::size_t j = 0; j <= n; j++) {
-                _massSpringSystem.AddParticle(glm::vec3(i * delta , 1.5f, j * delta - 1.f));
+                _massSpringSystem.AddParticle(glm::vec3(i * delta , 1.5f, j * delta - 1.f), _massSpringSystem.TotalMass/(int(n)*int(n)));
                 if (i > 0) _massSpringSystem.AddSpring(GetID(i, j), GetID(i - 1, j));
-                // if (i > 1) _massSpringSystem.AddSpring(GetID(i, j), GetID(i - 2, j));
+                if (i > 1) _massSpringSystem.AddSpring(GetID(i, j), GetID(i - 2, j));
                 if (j > 0) _massSpringSystem.AddSpring(GetID(i, j), GetID(i, j - 1));
-                // if (j > 1) _massSpringSystem.AddSpring(GetID(i, j), GetID(i, j - 2));
+                if (j > 1) _massSpringSystem.AddSpring(GetID(i, j), GetID(i, j - 2));
                 if (i > 0 && j > 0) _massSpringSystem.AddSpring(GetID(i, j), GetID(i - 1, j - 1));
                 if (i > 0 && j < n) _massSpringSystem.AddSpring(GetID(i, j), GetID(i - 1, j + 1));
             }
@@ -124,6 +115,6 @@ namespace VCX::Labs::FSM {
         }
         _springsItem.UpdateElementBuffer(indices);
 
-        _FSMSolver.Reset(_massSpringSystem, 0.008, 10);
+        _FSMSolver.Reset(_massSpringSystem, 0.005, 1);
     }
 }

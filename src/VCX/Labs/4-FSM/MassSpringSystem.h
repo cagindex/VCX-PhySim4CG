@@ -13,20 +13,24 @@ namespace VCX::Labs::FSM {
 
         std::vector<glm::vec3>      Positions;
         std::vector<glm::vec3>      Velocities;
+        std::vector<glm::vec3>      Forces;
+        std::vector<float>          Mass;
         std::vector<int>            Fixed;
-        float                       Mass { .25f /(33*33) };
+        float                       TotalMass { .25f };
 
         std::vector<Spring>         Springs;
         float                       Stiffness { 1.f };
         float                       Damping   { 0.993f };
-        float                       Gravity   { 9.8f * (.25f/(33*33)) };
+        float                       Gravity   { 9.8f };
 
         Eigen::SparseMatrix<float>  L, J, M;
 
 
-        void AddParticle(glm::vec3 const & position, glm::vec3 const & velocity = glm::vec3(0)) {
+        void AddParticle(glm::vec3 const & position, float mass, glm::vec3 const & velocity = glm::vec3(0)) {
             Positions.push_back(position);
             Velocities.push_back(velocity);
+            Mass.push_back(mass);
+            Forces.push_back({ 0.f, -mass * Gravity, 0.f });
             Fixed.push_back(false);
         }
 

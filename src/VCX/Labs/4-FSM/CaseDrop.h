@@ -18,7 +18,7 @@ namespace VCX::Labs::FSM {
     public:
         CaseDrop();
 
-        virtual std::string_view const GetName() override { return "Case Hang"; }
+        virtual std::string_view const GetName() override { return "Case Drop"; }
         
         virtual void OnSetupPropsUI() override;
         virtual Common::CaseRenderResult OnRender(std::pair<std::uint32_t, std::uint32_t> const desiredSize) override;
@@ -36,12 +36,13 @@ namespace VCX::Labs::FSM {
         glm::vec3                               _particleColor { 1.f, 0.f, 0.f };
         glm::vec3                               _springColor   { 0.f, 0.f, 1.f };
         bool                                    _stopped       { false };
+        bool                                    _collisionCheck{ true };
 
         MassSpringSystem                        _massSpringSystem;
         FSMSolver                               _FSMSolver;
 
-        glm::vec3                               center { 1.f, 0.f, 0.f };
-        float                                   radius { .633f };
+        glm::vec3                               _center { 1.f, 0.f, 0.f };
+        float                                   _radius { .4f };
 
         void ResetSystem();
     };
