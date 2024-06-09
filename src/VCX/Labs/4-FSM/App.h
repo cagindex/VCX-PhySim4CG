@@ -5,7 +5,7 @@
 #include "Engine/app.h"
 #include "Labs/4-FSM/CaseHang.h"
 #include "Labs/4-FSM/CaseDrop.h"
-// #include "Labs/4-FSM/Case3DTest.h"
+#include "Labs/4-FSM/Case3DTest.h"
 #include "Labs/Common/UI.h"
 
 namespace VCX::Labs::FSM {
@@ -15,12 +15,12 @@ namespace VCX::Labs::FSM {
 
         CaseHang      _caseHang;
         CaseDrop      _caseDrop;
-        // Case3DTest    _case3DTest;
+        Case3DTest    _case3DTest;
         
         std::size_t _caseId = 0;
 
         std::vector<std::reference_wrapper<Common::ICase>> _cases = {
-             _caseHang, _caseDrop };
+             _caseHang, _caseDrop, _case3DTest };
 
     public:
         App();

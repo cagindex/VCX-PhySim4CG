@@ -41,6 +41,8 @@ namespace VCX::Labs::FSM {
         MassSpringSystem                        _massSpringSystem;
         FSMSolver                               _FSMSolver;
 
+        std::size_t                             _sel_id { 0 };
+
         void ResetSystem();
     };
 }

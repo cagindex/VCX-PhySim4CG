@@ -6,7 +6,8 @@ namespace VCX::Labs::FSM {
     App::App():
         _ui(Labs::Common::UIOptions {}),
         _caseHang(),
-        _caseDrop() {
+        _caseDrop(),
+        _case3DTest() {
     }
 
     void App::OnFrame() {

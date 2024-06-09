@@ -127,13 +127,6 @@ namespace VCX::Labs::FSM {
         return d;
     }
 
-    static Eigen::VectorXf ComputeSimplicialLLT(
-        Eigen::SparseMatrix<float> const & A,
-        Eigen::VectorXf const & b) {
-        auto solver = Eigen::SimplicialLLT<Eigen::SparseMatrix<float>>(A);
-        return solver.solve(b);
-    }
-
     static void SpringConstraint (MassSpringSystem & system, float tauc, int iters) {
         while( iters-- ){
             for (std::size_t idx = 0; idx < system.Springs.size(); ++idx){

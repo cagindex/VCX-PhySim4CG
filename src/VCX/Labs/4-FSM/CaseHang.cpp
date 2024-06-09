@@ -21,13 +21,16 @@ namespace VCX::Labs::FSM {
     }
 
     void CaseHang::OnSetupPropsUI() {
+        ImGui::Text("Selected Point %u", _sel_id);
+        ImGui::Spacing();
+        
         if (ImGui::CollapsingHeader("Algorithm", ImGuiTreeNodeFlags_DefaultOpen)) {
             if (ImGui::Button("Reset System")) ResetSystem();
             ImGui::SameLine();
             if (ImGui::Button(_stopped ? "Start Simulation" : "Stop Simulation")) _stopped = ! _stopped;
             ImGui::SliderFloat("Total. Mass", &_massSpringSystem.TotalMass, .5f, 10.f);
-            ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 100.f, 3000.f);
-            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.9f, 1.f);
+            ImGui::SliderFloat("Spr. Stiff.", &_massSpringSystem.Stiffness, 1.f, 100.f);
+            ImGui::SliderFloat("Spr. Damp.", &_massSpringSystem.Damping, 0.8f, 1.f);
             ImGui::SliderFloat("Gravity", &_massSpringSystem.Gravity, 1.f, 10.f);
         }
         ImGui::Spacing();
@@ -83,40 +86,39 @@ namespace VCX::Labs::FSM {
     void CaseHang::OnProcessInput(ImVec2 const & pos) {
         _cameraManager.ProcessInput(_camera, pos);
         if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
-            _massSpringSystem.Positions[0] += glm::vec3(0.f, 0.01f, 0.f);
+            ImVec2 win_size = ImGui::GetWindowSize();
+            float w = win_size.x, h = win_size.y;
+
+            glm::mat4 transformation = _camera.GetTransformationMatrix(w / h);
+
+            float mouse_w = pos.x, mouse_h = pos.y;
+            for (std::uint32_t idx = 0; idx < _massSpringSystem.Positions.size(); ++idx){
+                glm::vec3 p   = _massSpringSystem.Positions[idx];
+                glm::vec4 res = transformation * glm::vec4(p, 1.f);
+
+                float pixel_w = res[0] / res[3],
+                      pixel_h = res[1] / res[3];
+
+                float img_w = (pixel_w + 1.f) * 0.5f * w;
+                float img_h = (1.f - pixel_h) * 0.5f * h;
+
+                float dw = img_w - mouse_w, dh = img_h - mouse_h;
+                if ((dw * dw + dh * dh) <= 100){
+                    _massSpringSystem.Fixed[_sel_id] = false;
+                    _sel_id = idx;
+                    break;
+                }
+            }
         }
-        //     ImVec2 win_size = ImGui::GetWindowSize();
-        //     float w = win_size.x, h = win_size.y;
-
-        //     glm::mat4 transformation = _camera.GetTransformationMatrix(w / h);
-
-        //     float mouse_w = pos.x, mouse_h = pos.y;
-        //     for (std::uint32_t idx = 0; idx < _massSpringSystem.Positions.size(); ++idx){
-        //         glm::vec3 p   = _massSpringSystem.Positions[idx];
-        //         glm::vec4 res = transformation * glm::vec4(p, 1.f);
-
-        //         float pixel_w = res[0] / res[3],
-        //               pixel_h = res[1] / res[3];
-
-        //         float img_w = (pixel_w + 1.f) * 0.5f * w;
-        //         float img_h = (1.f - pixel_h) * 0.5f * h;
-
-        //         float dw = img_w - mouse_w, dh = img_h - mouse_h;
-        //         if ((dw * dw + dh * dh) <= 100){
-        //             selected_point_idx = idx;
-        //             break;
-        //         }
-        //     }
-        // }
     }
 
     void CaseHang::OnProcessMouseControl(glm::vec3 mouseDelta) {   
         if (ImGui::IsMouseDown(ImGuiMouseButton_Left)){
-            _massSpringSystem.Fixed[0] = true;
-            _massSpringSystem.Positions[0] += .1f * mouseDelta;
+            _massSpringSystem.Fixed[_sel_id] = true;
+            _massSpringSystem.Positions[_sel_id] += .1f * mouseDelta;
         }
         else{
-            _massSpringSystem.Fixed[0] = false;
+            _massSpringSystem.Fixed[_sel_id] = false;
         }
     }
 
@@ -143,9 +145,9 @@ namespace VCX::Labs::FSM {
             }
         }
         // _massSpringSystem.Fixed[GetID(0, 0)] = true;
-        _massSpringSystem.Fixed[GetID(0, n)] = true;
+        // _massSpringSystem.Fixed[GetID(0, n)] = true;
 
-        // _massSpringSystem.Fixed[GetID(n, 0)] = true;
+        _massSpringSystem.Fixed[GetID(n, 0)] = true;
         _massSpringSystem.Fixed[GetID(n, n)] = true;
 
         // _massSpringSystem.Fixed[GetID(int(n/2), int(n/2))] = true;
